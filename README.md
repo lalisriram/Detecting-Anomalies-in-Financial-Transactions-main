@@ -1,13 +1,24 @@
 # Detecting Anomalies in Financial Transactions
 
-### Classification of Financial Anomalies
+
+#TEAM NUMBER:
+
+#NAME                #EMAIL
+KOPPU ABHINAY       9921004361@klu.ac.in
+PERNEEDI SITARAM    9921004560@klu.ac.in
+KODAVALUR LALISRIRAM 9921004343@klu.ac.in
+POGAKU NOOR AHAMMAD  9921004570@klu.ac.in
+
+#PROBLEM STATEMENT
+Detecting Anomalies In Financial Transaction
 Our main motto is to find the fraud in the Finanacial Transaction in all over the world transactions.
+we need solution to stop the fraud that is happening all over the world.
+
+#ABOUT THE PROJECT
 
 Derived from this observation we distinguish two classes of anomalous journal entries, namely **"global"** and **"local" anomalies** as illustrated in **Figure 2** below:
 
 ![image](https://user-images.githubusercontent.com/64821137/231603556-ac7f2d61-14f5-4bc9-804b-859059f4104f.png)
-
-**Figure 2:** Illustrative example of global and local anomalies portrait in a feature space of the two transaction features "Posting Amount" (Feature 1) and "Posting Positions" (Feature 2).
 
 ***Global Anomalies***, are financial transactions that exhibit **unusual or rare individual attribute values**. These anomalies usually relate to highly skewed attributes e.g. seldom posting users, rarely used ledgers, or unusual posting times. 
 
@@ -22,6 +33,7 @@ The objective of this lab is to walk you through a deep learning based methodolo
 >1. the majority of financial transactions recorded within an organizations’ ERP-system relate to regular day-to-day business activities and perpetrators need to deviate from the ”regular” in order to conduct fraud,
 >2. such deviating behaviour will be recorded by a very limited number of financial transactions and their respective attribute values or combination of attribute values and we refer to such deviation as "anomaly".
 
+#TECHNICAL IMPLEMENTATION
 Concluding from these assumptions we can learn a model of regular journal entries with minimal ”harm” caused by the potential anomalous ones.
 
 In order to detect such anomalies, we will train deep autoencoder networks to learn a compressed but "lossy" model of regular transactions and their underlying posting pattern. Imposing a strong regularization onto the network hidden layers limits the networks' ability to memorize the characteristics of anomalous journal entries. Once the training process is completed, the network will be able to reconstruct regular journal entries, while failing to do so for the anomalous ones.
@@ -39,7 +51,7 @@ Please note, that this lab is neither a complete nor comprehensive forensic data
 
 The dataset was augmented and renamed the attributes to appear more similar to a real-world dataset that one usually observes in SAP-ERP systems as part of SAP's Finance and Cost controlling (FICO) module. 
 
-The dataset contains a subset of in total 7 categorical and 2 numerical attributes available in the FICO BKPF (containing the posted journal entry headers) and BSEG (containing the posted journal entry segments) tables. Please, find below a list of the individual attributes as well as a brief description of their respective semantics:
+below a list of the individual attributes as well as a brief description of their respective semantics:
 
 >- `BELNR`: the accounting document number,
 >- `BUKRS`: the company code,
@@ -64,7 +76,6 @@ You may also have noticed the attribute `label` in the data. We will use this fi
 The objective of this section is to familiarize ourselves with the underlying idea and concepts of building a deep autoencoder neural network (AENN). We will cover the major building blocks and the specific network structure of AENNs as well as an exemplary implementation using the open source machine learning library PyTorch.
 
 ### Autoencoder Neural Network Architecture
-
 
 
 AENNs or "Replicator Neural Networks" are a variant of general feed-forward neural networks that have been initially introduced by Hinton and Salakhutdinov in [6]. AENNs usually comprise a **symmetrical network architecture** as well as a central hidden layer, referred to as **"latent"** or **"coding" layer**, of lower dimensionality. The design is chosen intentionally since the training objective of an AENN is to reconstruct its input in a "self-supervised" manner. 
@@ -110,4 +121,9 @@ The visualization reveals that the pre-trained model is able to reconstruct the 
 <p align="center">
   <img src="https://user-images.githubusercontent.com/64821137/231606709-1c1b4aa9-41f4-4e41-b494-a5b2e0ebfd1a.png" />
 </p>
+![image](https://github.com/lalisriram/Detecting-Anomalies-in-Financial-Transactions-main/assets/163636482/a6340938-2c6e-4c9d-8801-edf608dab181)
 
+#TECHSTACKS USED
+MachineLearning,Neural Network,Encoder,Autoencoder.
+
+#How To Run Locally
