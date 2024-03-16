@@ -127,3 +127,26 @@ The visualization reveals that the pre-trained model is able to reconstruct the 
 MachineLearning,Neural Network,Encoder,Autoencoder.
 
 #How To Run Locally
+STEP-1
+import os
+import sys
+from datetime import datetime
+import pandas as pd
+import random as rd
+import numpy as np
+import torch
+from torch import nn
+from torch import autograd
+from torch.utils.data import DataLoader
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+import seaborn as sns
+from IPython.display import Image, display
+sns.set_style('darkgrid')
+import warnings
+warnings.filterwarnings("ignore")
+%matplotlib inline
+
+STEP-2
+now = datetime.utcnow().strftime("%Y%m%d-%H:%M:%S")
+print('[LOG {}] The CUDNN backend version: {}'.format(now, torch.backends.cudnn.version()))
