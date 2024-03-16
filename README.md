@@ -1,6 +1,5 @@
 # Detecting Anomalies in Financial Transactions
 
-
 #TEAM NUMBER:
 
 #NAME                #EMAIL
