@@ -129,7 +129,7 @@ The visualization reveals that the pre-trained model is able to reconstruct the 
 #TECHSTACKS USED
 MachineLearning,Neural Network,Encoder,Autoencoder.
 
-##How To Run Locally
+# How To Run Locally
 STEP-1
 import os
 import sys
@@ -369,9 +369,9 @@ for i in range(0, reconstruction.size()[0]):
         now = datetime.utcnow().strftime("%Y%m%d-%H:%M:%S")
         print('[LOG {}] collected individual reconstruction loss of: {:06}/{:06} transactions'.format(now, i, reconstruction.size()[0]))
 
-#WHATS NEXT ?
+# WHATS NEXT ?
 In future we are going to update this project by building a website in the name of anomalies in financial transactions so that people working in banks and 
 other sectors can access the transaction data and can conform that the transactions done by the customers is fraud or genuine.
 
-#DECLARATION
+# DECLARATION
 We confirm that the project showcased here was either developed entirely during the hackathon or underwent significant updates within the hackathon timeframe. We understand that if any plagiarism from online sources is detected, our project will be disqualified, and our participation in the hackathon will be revoked.
