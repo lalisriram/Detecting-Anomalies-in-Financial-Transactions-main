@@ -1,5 +1,6 @@
-# Detecting Anomalies in Financial Transactions
 
+# Detecting Anomalies in Financial Transactions
+# video link:- https://drive.google.com/file/d/1Tv9MvbBC6LlT82vjmHLWOdrNXSk8XCQN/view?usp=sharing
 #TEAM NUMBER:VH116
 
 #NAME                   #EMAIL
@@ -128,7 +129,7 @@ The visualization reveals that the pre-trained model is able to reconstruct the 
 #TECHSTACKS USED
 MachineLearning,Neural Network,Encoder,Autoencoder.
 
-#How To Run Locally
+##How To Run Locally
 STEP-1
 import os
 import sys
@@ -152,3 +153,225 @@ warnings.filterwarnings("ignore")
 STEP-2
 now = datetime.utcnow().strftime("%Y%m%d-%H:%M:%S")
 print('[LOG {}] The CUDNN backend version: {}'.format(now, torch.backends.cudnn.version()))
+
+STEP-3
+USE_CUDA = True
+now = datetime.utcnow().strftime("%Y%m%d-%H:%M:%S")
+print('[LOG {}] The Python version: {}'.format(now, sys.version))
+
+STEP-4
+seed_value = 1234
+rd.seed(seed_value)
+np.random.seed(seed_value)
+torch.manual_seed(seed_value)
+if (torch.backends.cudnn.version() != None and USE_CUDA == True):
+    torch.cuda.manual_seed(seed_value)
+    
+STEP-5
+ori_dataset = pd.read_csv('fraud_dataset_v2.csv')
+ori_dataset.head()
+
+STEP-6
+now = datetime.utcnow().strftime("%Y%m%d-%H:%M:%S")
+print('[LOG {}] Transactional dataset of {} rows and {} columns loaded'.format(now, ori_dataset.shape[0], ori_dataset.shape[1]))
+
+STEP-7
+ori_dataset.label.value_counts()
+
+STEP-8
+print(ori_dataset.columns)
+print(ori_dataset.head())
+if 'label' in ori_dataset.columns:
+    label = ori_dataset.pop('label')
+else:
+    print("The 'label' column does not exist in ori_dataset.")
+    
+STEP-9
+ori_dataset.head(10)
+
+STEP-10
+fig, ax = plt.subplots(1,2)
+fig.set_figwidth(20)
+g = sns.countplot(x=ori_dataset['BSCHL'], ax=ax[0])
+g.set_xticklabels(g.get_xticklabels(), rotation=90)
+g.set_title('Distribution of BSCHL attribute values')
+g = sns.countplot(x=ori_dataset['HKONT'], ax=ax[1])
+g.set_xticklabels(g.get_xticklabels(), rotation=90)
+g.set_title('Distribution of HKONT attribute values')
+
+STEP-11
+categorical_attr_names = ['KTOSL', 'PRCTR', 'BSCHL', 'HKONT','WAERS', 'BUKRS']
+
+STEP-12
+ori_dataset_categ_transformed = pd.get_dummies(ori_dataset[categorical_attr_names])
+
+STEP-13
+fig, ax = plt.subplots(1,2)
+fig.set_figwidth(20)
+g = sns.distplot(ori_dataset['DMBTR'].tolist(), ax=ax[0])
+g.set_title('Distribution of DMBTR amount values')
+g = sns.distplot(ori_dataset['WRBTR'].tolist(), ax=ax[1])
+g.set_title('Distribution of WRBTR amount values')
+
+STEP-14
+import numpy as np
+numeric_attr_names = ['DMBTR', 'WRBTR']
+numeric_attr = ori_dataset[numeric_attr_names] + 1e-7
+numeric_attr = numeric_attr.apply(np.log)
+ori_dataset_numeric_attr = (numeric_attr - numeric_attr.min()) / (numeric_attr.max() - numeric_attr.min())
+
+STEP-15
+numeric_attr_vis = ori_dataset_numeric_attr.copy()
+numeric_attr_vis['label'] = label
+g = sns.pairplot(data=numeric_attr_vis, vars=numeric_attr_names, hue='label')
+g.fig.suptitle('Distribution of DMBTR vs. WRBTR amount values')
+g.fig.set_size_inches(15, 5)
+
+STEP-16
+ori_subset_transformed = pd.concat([ori_dataset_categ_transformed, ori_dataset_numeric_attr], axis = 1)
+
+STEP-17
+ori_subset_transformed.shape
+
+STEP-18
+import gc
+gc.collect()
+
+STEP-19
+class encoder(nn.Module):
+    def __init__(self):
+        super(encoder, self).__init__()
+        self.encoder_L1 = nn.Linear(in_features=ori_subset_transformed.shape[1], out_features=3, bias=True) # add linearity
+        nn.init.xavier_uniform_(self.encoder_L1.weight) # init weights according to [9]
+        self.encoder_R1 = nn.LeakyReLU(negative_slope=0.4, inplace=True) # add non-linearity according to [10]
+    def forward(self, x):
+        x = self.encoder_R1(self.encoder_L1(x)) # don't apply dropout to the AE bottleneck
+        return x
+        
+STEP-20
+encoder_train = encoder()
+if (torch.backends.cudnn.version() != None and USE_CUDA == True):
+  encoder_train = encoder()
+  
+STEP-21
+now = datetime.utcnow().strftime("%Y%m%d-%H:%M:%S")
+print('[LOG {}] encoder architecture:\n\n{}\n'.format(now, encoder_train))
+
+STEP-22
+class decoder(nn.Module):
+    def __init__(self):
+        super(decoder, self).__init__()
+        self.decoder_L1 = nn.Linear(in_features=3, out_features=ori_subset_transformed.shape[1], bias=True) # add linearity
+        nn.init.xavier_uniform_(self.decoder_L1.weight)  # init weights according to [9]
+        self.decoder_R1 = nn.LeakyReLU(negative_slope=0.4, inplace=True) # add non-linearity according to [10]
+    def forward(self, x):
+        x = self.decoder_R1(self.decoder_L1(x))
+        return x
+        
+STEP-23
+decoder_train = decoder()
+if (torch.backends.cudnn.version() != None) and (USE_CUDA == True):
+    decoder_train = decoder()
+now = datetime.utcnow().strftime("%Y%m%d-%H:%M:%S")
+print('[LOG {}] decoder architecture:\n\n{}\n'.format(now, decoder_train))
+
+STEP-24
+loss_function = nn.BCEWithLogitsLoss(reduction='mean')
+
+STEP-25
+learning_rate = 1e-3
+encoder_optimizer = torch.optim.Adam(encoder_train.parameters(), lr=learning_rate)
+decoder_optimizer = torch.optim.Adam(decoder_train.parameters(), lr=learning_rate)
+
+STEP-26
+num_epochs = 5
+mini_batch_size = 128
+
+STEP-27
+torch_dataset = torch.from_numpy(ori_subset_transformed.values).float()
+dataloader = DataLoader(torch_dataset, batch_size=mini_batch_size, shuffle=True, num_workers=0)
+if (torch.backends.cudnn.version() != None) and (USE_CUDA == True):
+    dataloader = DataLoader(torch_dataset, batch_size=mini_batch_size, shuffle=True)
+    
+STEP-28
+losses = []
+data = autograd.Variable(torch_dataset)
+for epoch in range(num_epochs):
+    mini_batch_count = 0
+    if(torch.backends.cudnn.version() != None) and (USE_CUDA == True):
+        encoder_train
+        decoder_train
+    encoder_train.train()
+    decoder_train.train()
+    start_time = datetime.now()
+    for mini_batch_data in dataloader:
+        mini_batch_count += 1
+        mini_batch_torch = autograd.Variable(mini_batch_data)
+        z_representation = encoder_train(mini_batch_torch) # encode mini-batch data
+        mini_batch_reconstruction = decoder_train(z_representation) # decode mini-batch data
+        reconstruction_loss = loss_function(mini_batch_reconstruction, mini_batch_torch)
+        decoder_optimizer.zero_grad()
+        encoder_optimizer.zero_grad()
+        reconstruction_loss.backward()
+        decoder_optimizer.step()
+        encoder_optimizer.step()
+        if mini_batch_count % 1000 == 0:
+            mode = 'GPU' if (torch.backends.cudnn.version() != None) and (USE_CUDA == True) else 'CPU'
+            now = datetime.utcnow().strftime("%Y%m%d-%H:%M:%S")
+            end_time = datetime.now() - start_time
+            print('[LOG {}] training status, epoch: [{:04}/{:04}], batch: {:04}, loss: {}, mode: {}, time required: {}'.format(now, (epoch+1), num_epochs, mini_batch_count, np.round(reconstruction_loss.item(), 4), mode, end_time))
+            start_time = datetime.now()
+    encoder_train.cpu().eval()
+    decoder_train.cpu().eval()
+    reconstruction = decoder_train(encoder_train(data))
+    reconstruction_loss_all = loss_function(reconstruction, data)
+    losses.extend([reconstruction_loss_all.item()])
+    now = datetime.utcnow().strftime("%Y%m%d-%H:%M:%S")
+    print('[LOG {}] training status, epoch: [{:04}/{:04}], loss: {:.10f}'.format(now, (epoch+1), num_epochs, reconstruction_loss_all.item()))
+    encoder_model_name = "ep_{}_encoder_model.pth".format((epoch+1))
+    torch.save(encoder_train.state_dict(), os.path.join("/content/drive/MyDrive", encoder_model_name))
+    decoder_model_name = "ep_{}_decoder_model.pth".format((epoch+1))
+    torch.save(decoder_train.state_dict(), os.path.join("/content/drive/MyDrive", decoder_model_name))
+    gc.collect()
+    
+STEP-29
+plt.plot(range(0, len(losses)), losses)
+plt.xlabel('[training epoch]')
+plt.xlim([0, len(losses)])
+plt.ylabel('[reconstruction-error]')
+plt.title('AENN training performance')
+
+STEP-30
+encoder_model_name = "/content/drive/MyDrive/ep_5_encoder_model.pth"
+decoder_model_name = "/content/drive/MyDrive/ep_5_decoder_model.pth"
+encoder_eval = encoder()
+decoder_eval = decoder()
+encoder_eval.load_state_dict(torch.load(os.path.join("models", encoder_model_name)))
+decoder_eval.load_state_dict(torch.load(os.path.join("models", decoder_model_name)))
+
+STEP-31
+data = autograd.Variable(torch_dataset)
+encoder_eval.eval()
+decoder_eval.eval()
+reconstruction = decoder_eval(encoder_eval(data))
+
+STEP-32
+reconstruction_loss_all = loss_function(reconstruction, data)
+now = datetime.utcnow().strftime("%Y%m%d-%H:%M:%S")
+print('[LOG {}] collected reconstruction loss of: {:06}/{:06} transactions'.format(now, reconstruction.size()[0], reconstruction.size()[0]))
+print('[LOG {}] reconstruction loss: {:.10f}'.format(now, reconstruction_loss_all.item()))
+
+STEP-33
+reconstruction_loss_transaction = np.zeros(reconstruction.size()[0])
+for i in range(0, reconstruction.size()[0]):
+    reconstruction_loss_transaction[i] = loss_function(reconstruction[i], data[i]).item()
+    if(i % 100000 == 0):
+        now = datetime.utcnow().strftime("%Y%m%d-%H:%M:%S")
+        print('[LOG {}] collected individual reconstruction loss of: {:06}/{:06} transactions'.format(now, i, reconstruction.size()[0]))
+
+#WHATS NEXT ?
+In future we are going to update this project by building a website in the name of anomalies in financial transactions so that people working in banks and 
+other sectors can access the transaction data and can conform that the transactions done by the customers is fraud or genuine.
+
+#DECLARATION
+We confirm that the project showcased here was either developed entirely during the hackathon or underwent significant updates within the hackathon timeframe. We understand that if any plagiarism from online sources is detected, our project will be disqualified, and our participation in the hackathon will be revoked.
